@@ -1,0 +1,153 @@
+<html>
+    <head>
+        <title>Croods homepage</title>
+        <style>
+            #profileContainer
+            {
+                position: absolute; 
+                top:0;
+                right:0; 
+                background-color: #9d7ee6; 
+                width: 20%;
+                height:10%; 
+                padding-left: 10px;
+            }
+            #profileUsername
+            {
+
+                font-family: Georgia, 'Times New Roman', Times, serif;
+            }
+            #profileImage
+            {
+                width:50px;
+                height: 50px;
+                position: absolute; 
+                top:0;
+                right:10px;
+            }
+            #messageCreateContainer
+            {
+                width: 70%; 
+                height:30%;
+                background-color: lightgray;
+                padding: 20px;
+                margin-left: 1%;
+            }
+            #centered
+            {
+                position: inherit;
+                left:50%; 
+                transform: translate(50%, 0%);
+            }
+            body
+            {
+                margin:0; 
+                padding:0; 
+            }
+            #newMessage
+            {
+                
+                height:50%;
+                width:80%
+            }
+
+
+        </style>
+    </head>
+    <body>
+        <h1>The Croods Homepage</h1>
+        <div id="profileContainer">
+            <p id="profileUsername"></p>
+            <img id="profileImage">
+            <button onclick="logout()">Log out</button>
+        </div>
+        <div id="messageCreateContainer">
+            <h2 id="centered">Send a message :)</h2>
+            <input id="newMessage">
+            <button onclick="SendMessage()" id="postMessage">Squirt</button>
+        </div>
+        
+        <div class="msgContainer">
+            <img class="pfpMessage" src="https://archive.org/download/twitter-default-pfp/e.png"></img>
+            <div class="MessageOwner"> Name </div>
+        <div class="messageConcent">
+            I very much love valentines!
+        </div>
+        <button class="upvoteButton">I Like!</button>
+        <button class="downvoteButton">I no Like!</button>
+
+        </div>
+
+        <div class="messageTimeline">
+            <div class="msgContainer">
+                <img class="pfpMessage" src="https://archive.org/download/twitter-default-pfp/e.png">
+                <div class="MessageOwner">Name</div>
+            <div class="messageContent">
+                I very much love valentines!
+            </div>
+                <button class="upvoteButton">I Like!</button>
+                <button class="downvoteButton">I no Like!</button>
+            </div>
+        </div>
+
+        <script>
+            const SendMessage = () =>
+            {
+                const message = document.getElementById("newMessage").value; 
+                fetch("http://localhost:3000/api/message/postMessage" , 
+                {
+                    headers: {
+                        "Content-Type":"application/json"
+                    },
+                    method: "POST",
+                    body: JSON.stringify(
+                        {
+                            msg: message
+                        }
+                    )
+                }).then(res => res.json())
+                .then(data =>
+                {
+                    console.log(data)
+                })
+            }
+            
+            const logout = () =>
+            {
+                fetch("http://localhost:3000/api/user/logout", {
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                method:"POST",
+                }).then(data =>
+                {
+                    window.location.href = "/"; 
+                }) 
+            }
+
+            const init = () =>
+            {
+                //Gets the user details
+                fetch("http://localhost:3000/api/user/getUserDetails", {
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                method:"GET",
+                }).then(res => res.json()).then(data =>
+                {
+                    //if there is an error in the data return out of the function and goes back home
+                    if(data.error)
+                    {
+                        window.location.href = "/"; 
+                        return; 
+                    } 
+                    ////replaces the profile username and profile image with the accounts information
+                    document.getElementById("profileUsername").innerHTML = data.username;
+                    document.getElementById("profileImage").setAttribute("src",data.imageLink)
+                })
+            }
+            
+            init();
+        </script>
+    </body>
+</html> 

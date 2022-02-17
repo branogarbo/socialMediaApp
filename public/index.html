@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title> Brian's DMs (Celine) </title>
+    </head>
+    <body>
+        <h1> Brian's DMs (Celine) </h1>
+        <h2> Reigster</h2>
+
+        <p>Username</p>
+        <input type="text" id="usernameReg">
+
+        <p>Email</p>
+        <input type="text" id="emailReg">
+
+        <p>Password</p>
+        <input type="text" id="passwordReg">
+
+        <button onclick="register()">Register</button>
+        
+        <h2> Login </h2>
+        <p>Email</p>
+        <input type="text" id="emailLog">
+
+        <p>Password</p>
+        <input type="text" id="passwordLog">
+
+        <button onclick="login()">Login</button>
+
+        
+    </body>
+    <script>
+        const register = () => {
+            const username = document.getElementById("usernameReg").value;
+            const password = document.getElementById("passwordReg").value;
+            const email = document.getElementById("emailReg").value;
+
+            fetch("http://localhost:3000/api/user/register", {
+                method:"POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(
+                    username,
+                    email,
+                    password
+                 )
+            }).then(res => res.json()).then(data => console.log("register response", data));
+        }
+        const login = () => {
+            const email = document.getElementById("emailLog").value;
+            const password = document.getElementById("passwordLog").value;
+            //Gets the value of the input field of username and password for login
+            //const email = document.getElementById("emailReg").value;
+
+            fetch("http://localhost:3000/api/user/login",{ //Sends a POST request to the login route to long
+                method: "POST", //Defines what type of request this i
+                headers: { //Tells the server it will be receiving JSON
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+
+                    password,
+                    email
+                })
+                //takes a JSON object from the login page and stringifies it
+            }).then(res => res.json()).then(data=>{//after response is received converts response string to JSON
+                if(data.error)//if there is an error, print the error message to the DOM page
+                {
+                    document.getElementById("statusLog").innerHTML = `Status: ${data.message}`;
+                    return;
+                }
+                window.location.href="/homepage";
+                //If everything goes well, redirect to homepage since you are now logged in
+            });
+            
+        }
+        //same comments apply here
+        // (unfinished code) const Register = () =>
+    </script>
+</html>

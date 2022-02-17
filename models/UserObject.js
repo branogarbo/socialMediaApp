@@ -39,4 +39,4 @@ const User = new Schema({
 
 }, {collection: "users"})
 
-module.esports = mongoose.model("User", User);
+module.exports = mongoose.model("User", User);

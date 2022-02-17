@@ -43,11 +43,11 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(
+                body: JSON.stringify({
                     username,
                     email,
                     password
-                 )
+                })
             }).then(res => res.json()).then(data => console.log("register response", data));
         }
         const login = () => {
@@ -62,7 +62,6 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-
                     password,
                     email
                 })

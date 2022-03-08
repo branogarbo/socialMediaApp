@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const User = new Schema({
+const Msg = new Schema({
     ownerId:
     {
         type:String,
@@ -37,4 +37,4 @@ const User = new Schema({
     }
 }, {collection: "messages"})
 
-module.esports = mongoose.model("Messages", Msg);
+module.exports = mongoose.model("Messages", Msg);

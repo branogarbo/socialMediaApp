@@ -8,7 +8,7 @@
     </head>
     <body>
         <h1> Brian's DMs (Celine) </h1>
-        <h2> Reigster</h2>
+        <h2> Register</h2>
 
         <p>Username</p>
         <input type="text" id="usernameReg">
@@ -18,15 +18,18 @@
 
         <p>Password</p>
         <input type="text" id="passwordReg">
-
+        <p id="statusReg"></p>
         <button onclick="register()">Register</button>
         
+
         <h2> Login </h2>
         <p>Email</p>
         <input type="text" id="emailLog">
 
         <p>Password</p>
         <input type="text" id="passwordLog">
+        <p id="statusLog"></p>
+
 
         <button onclick="login()">Login</button>
 
@@ -48,8 +51,17 @@
                     email,
                     password
                 })
-            }).then(res => res.json()).then(data => console.log("register response", data));
+            }).then(res => res.json()).then(data => {
+                console.log("register response", data);
+                if (data.error) {
+                    document.getElementById("statusReg").innerHTML = `Status: ${data.message}`;
+                    return;
+                }
+
+                window.location.href = "/homepage";
+            })
         }
+
         const login = () => {
             const email = document.getElementById("emailLog").value;
             const password = document.getElementById("passwordLog").value;
@@ -79,5 +91,6 @@
         }
         //same comments apply here
         // (unfinished code) const Register = () =>
+        
     </script>
 </html>

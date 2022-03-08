@@ -21,6 +21,8 @@ const cookieParser = require("cookie-parser")
 const User = require("./models/UserObject")
 //allows us to use mongoose schema and store data in mongodb
 
+const Msg = require("./models/MsgObjects")
+
 const {registerValidation, loginValidation} = require("./validation")
 
 //lets us use the mongoose library
@@ -49,13 +51,13 @@ mongoose.connect(process.env.MONGO_CONNECT, {useNewUrlParser:true, useUnifiedTop
 //allows account information to be stored and modified through a JSON object in Accounts 
 
 app.get("/", (req,res) => { //listening for a requests and executes the function
-    res.sendFile(path.join(__dirname,"public","index.html") )
+    res.sendFile(path.join(__dirname,"public","index.html"))
     //sends the index.html file to the user for their browser to render
 })
 
 const TokenCheck = (req,res, next)=> //creates a middleware function named TokenCheck
 {
-    const token = req.cookies.authCookie;
+    const token = req.cookies.authToken;
     //Reads the cookies from the user and stores that in the token variable
     if(!token) return res.send("Error! You aren't logged in!");
     //Checks if there is a cookie, if not cookie not logged in and tells the user they aren't logged in.
@@ -183,7 +185,7 @@ app.post("/api/user/login", async(req, res) =>
     if(!emailExists) return res.status(400).send({error:true, message:"Email or Password incorrect!"});
 
     //Checks to see if the hashed password matches the inputted password
-    const validPass = await bcrypt.compate(password, emailExists.password)
+    const validPass = await bcrypt.compare(password, emailExists.password)
 
 
     //if(!Accounts[username]) return res.status(400).send({error:true, message:"Username or password incorrect"})
@@ -199,7 +201,7 @@ app.post("/api/user/login", async(req, res) =>
     //creates a token that stores the hashed username
 
     res.clearCookie("authToken");
-    res.cookie("authToken", token, {maxAge:900000, httpOnly})
+    res.cookie("authToken", token, {maxAge:900000, httpOnly:true})
     //Clears the cookie and sets the new token as the cookie with parameters
 
     res.send({error:false, message: token})
@@ -226,22 +228,117 @@ app.get("/api/user/getUserDetails", TokenCheck, async (req, res)=>
 
 app.post("/api/message/postMessage", TokenCheck, async(req, res) =>
 {
-    var msg = req.msg;
-    if(msg.trim().length ==0 ) return res.status(200).send({error:true, msg:"must send a message"})
+    var msg = req.body.msg;
+    if(msg.trim().length ==0 ) return res.status(400).send({error:true, msg:"must send a message"})
 
-    const Message = new msg(
+    const Message = new Msg(
         {
             ownerId: req.user.__id,
             message: msg
         }
     )
     try{
-        Message.save();
+        await Message.save();
         res.json({error: false});
     } catch (err) {
         res.json({error: true, message: "could not save message to database"});
     }
 })
+
+app.get("/api/message/getMessages", TokenCheck, async (req, res) =>
+{
+    //finds the userAccount by the Token's id and returns the account's information
+    const userAccount = await User.findById(req.user);
+    //if cannot find the account send an error as userAccount is undefined
+    if(!userAccount) return res.status(400).send({error:true, message:"Your account does not exist?"})
+
+    //Makes the friends list variable and creates an array by parsing the string array into an actual array
+    const friends = JSON.parse(userAccount.friendlist);
+    //Looks through the messsages and finds which belongs to the userAccount
+    const selfMessages = await Msg.find({ownerId: req.user});
+
+
+    // const selfMessages = [
+    //     {msg:"BALLS", date:200},
+    //     {msg:"MEOW", date:232},
+    //     {msg:"BARK", date:120},
+    //     {msg:"CAR", date:320},
+    //     {msg:"DOG", date:2310},
+    //     {msg:"RAT", date:21},
+    //     {msg:"SAT", date:2230},
+    //     {msg:"WQGGQW", date:210},
+    //     {msg:"PMG", date:260},
+    //     {msg:"OMG", date:210},
+    //     {msg:"WOW!", date:211},
+    //     {msg:"BOOM", date:223},
+    //     {msg:"ZOOM", date:212},
+    // ]
+
+    //if you have no friends and no messages then display nothing and saves processing power since nothing would return
+    if(friends.length == 0 && selfMessages.length == 0) return res.send({error:false, data:[]})
+
+    //10 messages
+    //if friends then creates three empty arrays 
+    //stores the literal messages to display
+    let messages = []; 
+    //stores the dates the messages were sent for the algorithm
+    let dateMessage = []; 
+    //who sent the messages
+    let userInfos = [];
+
+    //
+    messages.push(selfMessages[0])
+    
+    var firstDate = selfMessages[0].date.getTime();
+
+    dateMessage.push(firstDate)
+    userInfos.push({
+        username: userAccount.username,
+        pfp: userAccount.profilePicture
+    })
+
+    for(let i = 1; i < selfMessages.length; i++)
+    {
+        var messageDate = selfMessages[i].date.getTime()
+
+        console.log(messages.length < max)
+        if(dateMessage[dateMessage.length-1] >= messageDate && messages.length < max)
+        {
+            messages.push(selfMessages[i]); 
+            dateMessage.push(messageDate);
+            userInfos.push({
+                username: userAccount.username,
+                pfp: userAccount.profilePicture
+            })
+        }
+        else if(dateMessage[dateMessage.length-1] < messageDate)
+        {
+            for(let y = 0; y < messages.length;y++)
+            {
+                if(messageDate > dateMessage[y])
+                {
+                    messages.splice(y, 0, selfMessages[i]);
+                    dateMessage.splice(y, 0, messageDate);
+                    added = true; 
+                    break; 
+                }
+            }
+            if(messages.length > max)
+            {
+                messages.splice(max,1)
+                dateMessage.splice(max,1)
+                userInfos.splice(max, 1)
+            }
+        }
+    }
+    console.log(messages)
+    console.log(dateMessage)
+
+    res.send({error:false, message:messages, userInfos: userInfos})
+})
+
+//const friends = JSON.parse(userAccount.friendlist);
+
 
 app.listen(3000, () => console.log("Server up"))
     

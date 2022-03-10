@@ -238,7 +238,7 @@ app.post("/api/message/postMessage", TokenCheck, async(req, res) =>
         }
     )
     try{
-        await Message.save();
+        Message.save();
         res.json({error: false});
     } catch (err) {
         res.json({error: true, message: "could not save message to database"});
@@ -247,16 +247,15 @@ app.post("/api/message/postMessage", TokenCheck, async(req, res) =>
 
 app.get("/api/message/getMessages", TokenCheck, async (req, res) =>
 {
-    //finds the userAccount by the Token's id and returns the account's information
+    //finds the userAccount by the token's id and returns the account's information
     const userAccount = await User.findById(req.user);
-    //if cannot find the account send an error as userAccount is undefined
+    //if cannot find the account send an error as userAccount is undefined 
     if(!userAccount) return res.status(400).send({error:true, message:"Your account does not exist?"})
 
-    //Makes the friends list variable and creates an array by parsing the string array into an actual array
+    //makes the friends list variable and creates an array by parsing the string array into an actual array
     const friends = JSON.parse(userAccount.friendlist);
-    //Looks through the messsages and finds which belongs to the userAccount
+    //looks through the messages and finds which belongs to the userAccount
     const selfMessages = await Msg.find({ownerId: req.user});
-
 
     // const selfMessages = [
     //     {msg:"BALLS", date:200},
@@ -274,36 +273,41 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) =>
     //     {msg:"ZOOM", date:212},
     // ]
 
-    //if you have no friends and no messages then display nothing and saves processing power since nothing would return
+    //if you have no friends and no messages then display nothing and saves processing power since nothing would return 
     if(friends.length == 0 && selfMessages.length == 0) return res.send({error:false, data:[]})
 
     //10 messages
-    //if friends then creates three empty arrays 
+    //if friends then creates three empty arrays
     //stores the literal messages to display
     let messages = []; 
-    //stores the dates the messages were sent for the algorithm
+    //stores when the messages were sent for the algorithm
     let dateMessage = []; 
-    //who sent the messages
-    let userInfos = [];
+    //who sent the messages 
+    let userInfos = []; 
 
-    //
+    //adds the first element to the array so it is not empty, we do this because if the array is empty the for loop has nothing to loop through.
     messages.push(selfMessages[0])
     
     var firstDate = selfMessages[0].date.getTime();
 
     dateMessage.push(firstDate)
+    
     userInfos.push({
         username: userAccount.username,
         pfp: userAccount.profilePicture
     })
 
+    //loops through the selfMessages array except for the first one
     for(let i = 1; i < selfMessages.length; i++)
     {
+        //stores the ms from the starting date (Jan 1 1970) into the variable messageDate.
         var messageDate = selfMessages[i].date.getTime()
 
-        console.log(messages.length < max)
+        //a condition where if the message datez is the least out of the current dates and the length is 
+        //less than the max, add the message to the end. 
         if(dateMessage[dateMessage.length-1] >= messageDate && messages.length < max)
         {
+            //pushes the information of the message, date, and user info into the messages array
             messages.push(selfMessages[i]); 
             dateMessage.push(messageDate);
             userInfos.push({
@@ -311,20 +315,32 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) =>
                 pfp: userAccount.profilePicture
             })
         }
+        //checks if the date being check is more recent than the last date in the array. 
+        //if true: run our sorting algorithm
         else if(dateMessage[dateMessage.length-1] < messageDate)
         {
+            //It loops through all the elements in the messages array
             for(let y = 0; y < messages.length;y++)
             {
+                //checks if the message is newer than the message at the y position in the messages array
                 if(messageDate > dateMessage[y])
                 {
+                    //uses the message data and puts the new message into the messages array at the y position
+                    //splice: inserts an element and moves everthing after it to the right
                     messages.splice(y, 0, selfMessages[i]);
                     dateMessage.splice(y, 0, messageDate);
-                    added = true; 
+                    userInfos.splice(y, 0, {
+                        username: userAccount.username,
+                        pfp: userAccount.profilePicture
+                    }) 
+                    //makes sure the messages is only added once to the array. It does this by stopping the for loop
                     break; 
                 }
             }
+            //if the messages length is greater than the max, then remove the last element in the array. 
             if(messages.length > max)
             {
+                //splice(a, b) a = position, b = how much to delete from that position
                 messages.splice(max,1)
                 dateMessage.splice(max,1)
                 userInfos.splice(max, 1)
@@ -334,6 +350,7 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) =>
     console.log(messages)
     console.log(dateMessage)
 
+    //sends to the client the messages to be show it on the webpage
     res.send({error:false, message:messages, userInfos: userInfos})
 })
 

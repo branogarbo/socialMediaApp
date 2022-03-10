@@ -8,7 +8,7 @@ const Msg = new Schema({
         min: 1,
         max: 2000
     },
-    messages:
+    message:
     {
         type:String,
         min: 1,
@@ -25,11 +25,6 @@ const Msg = new Schema({
         type:Number,
         min: 0,
         default:0
-    },
-    friendlist:
-    {
-        type:String,
-        required: true
     },
     date:{
         type:Date,

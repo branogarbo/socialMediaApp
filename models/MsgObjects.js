@@ -4,32 +4,32 @@ const Schema = mongoose.Schema;
 const Msg = new Schema({
     ownerId:
     {
-        type:String,
+        type: String,
         min: 1,
-        max: 2000
+        max: 2000,
     },
     message:
     {
-        type:String,
+        type: String,
         min: 1,
         max: 2000
     },
     upvotes:
     {
-        type:Number,
+        type: Number,
         min: 0,
-        default:0
+        default: 0
     },
     downvotes:
     {
-        type:Number,
+        type: Number,
         min: 0,
-        default:0
+        default: 0
     },
-    date:{
-        type:Date,
-        default:Date.now
+    date: {
+        type: Date,
+        default: Date.now
     }
-}, {collection: "messages"})
+}, { collection: "messages" })
 
 module.exports = mongoose.model("Messages", Msg);

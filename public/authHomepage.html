@@ -153,7 +153,7 @@
                     return
                 }
 
-                for (let i = 0; i < data.message.length; i++) {
+                for (let i = 0; i < data.message?.length; i++) {
                     DisplayMessage(data.userInfos[i].username, data.message[i].message, data.message[i]._id, data.userInfos[i].pfp)
                 }
             })
@@ -163,7 +163,6 @@
         const DisplayMessage = (name, content, id, pfpLink) => {
             var msgContainer = document.createElement("div");
             msgContainer.setAttribute("class", "msgContainer");
-            msgContainer.setAttribute("id", `msg${id}`)
             var pfpImage = document.createElement("img")
             pfpImage.setAttribute("class", "pfpMessage")
             //make this the actual user profile
@@ -185,12 +184,16 @@
 
             var upvote = document.createElement("button")
             upvote.setAttribute("class", "upvoteButton")
+            upvote.setAttribute("id", "upvote" + id);
+            upvote.addEventListener("click", () => !this.disabled && upvoteMsg(id))
             upvote.innerHTML = "I like this!"
 
             msgContainer.appendChild(upvote)
 
             var downvote = document.createElement("button")
             downvote.setAttribute("class", "downvoteButton")
+            downvote.setAttribute("id", "downvote" + id);
+            downvote.addEventListener("click", () => !this.disabled && downvoteMsg(id))
             downvote.innerHTML = "I dislike this!"
 
             msgContainer.appendChild(downvote)
@@ -200,6 +203,46 @@
             document.getElementById("messageTimeline").appendChild(
                 document.createElement("p")
             )
+        }
+
+        const upvoteMsg = msg_id => {
+            fetch("http://localhost:3000/api/message/upvote", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    msg_id,
+                })
+            }).then(res => res.json()).then(data => {
+                if (data.error) {
+                    console.log("cannot upvote message!");
+                    return;
+                }
+
+                console.log(msg_id);
+                document.getElementById("upvote" + msg_id).disabled = true;
+            })
+        }
+
+        const downvoteMsg = msg_id => {
+            fetch("http://localhost:3000/api/message/downvote", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    msg_id,
+                })
+            }).then(res => res.json()).then(data => {
+                if (data.error) {
+                    console.log("cannot upvote message!");
+                    return;
+                }
+
+                console.log(msg_id);
+                document.getElementById("downvote" + msg_id).disabled = true;
+            })
         }
 
         init();

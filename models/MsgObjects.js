@@ -14,18 +14,24 @@ const Msg = new Schema({
         min: 1,
         max: 2000
     },
-    upvotes:
-    {
+    upvotes: {
         type: Number,
+        default: 0,
         min: 0,
-        default: 0
     },
-    downvotes:
-    {
+    upvote_list: [{
+        type: String,
+        default: ""
+    }],
+    downvotes: {
         type: Number,
+        default: 0,
         min: 0,
-        default: 0
     },
+    downvote_list: [{
+        type: String,
+        default: ""
+    }],
     date: {
         type: Date,
         default: Date.now

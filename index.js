@@ -205,10 +205,6 @@ app.post("/api/user/login", async (req, res) => {
     //Sends that there were no errors
 })
 
-app.get("api/user/logout", (req, res) => {
-
-})
-
 app.get("/api/user/getUserDetails", TokenCheck, async (req, res) => {
     //req.user = {__id: budgiwq}
 
@@ -342,6 +338,40 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) => {
     res.send({ error: false, message: messages, userInfos: userInfos })
 
 })
+
+app.post("/api/message/upvote", TokenCheck, async (req, res) => {
+    let user_id = req.user._id;
+    let message_id = req.body.msg_id;
+    let message = await Msg.findById(message_id);
+
+    try {
+        let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
+            upvotes: message.upvotes + 1,
+            upvote_list: [...message.upvote_list, user_id],
+        });
+
+        res.json({ error: false, data: newMessage });
+    } catch (err) {
+        res.status(501).json({ error: true, data: "error updating message document" });
+    }
+});
+
+app.post("/api/message/downvote", TokenCheck, async (req, res) => {
+    let user_id = req.user._id;
+    let message_id = req.body.msg_id;
+    let message = await Msg.findById(message_id);
+
+    try {
+        let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
+            downvotes: message.downvotes + 1,
+            downvote_list: [...message.downvote_list, user_id],
+        });
+
+        res.json({ error: false, data: newMessage });
+    } catch (err) {
+        res.status(501).json({ error: true, data: "error updating message document" });
+    }
+});
 
 //const friends = JSON.parse(userAccount.friendlist);
 

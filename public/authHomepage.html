@@ -110,6 +110,7 @@
                 }).then(res => res.json())
                 .then(data => {
                     console.log(data)
+                    DisplayMessage(data.name, data.message, data.id, data.pfpLink);
                 })
         }
 
@@ -182,10 +183,13 @@
 
             msgContainer.appendChild(messageContent)
 
+
             var upvote = document.createElement("button")
             upvote.setAttribute("class", "upvoteButton")
             upvote.setAttribute("id", "upvote" + id);
-            upvote.addEventListener("click", () => !this.disabled && upvoteMsg(id))
+            upvote.addEventListener("click", () => {
+                upvoteMsg(id);
+            })
             upvote.innerHTML = "I like this!"
 
             msgContainer.appendChild(upvote)
@@ -193,7 +197,9 @@
             var downvote = document.createElement("button")
             downvote.setAttribute("class", "downvoteButton")
             downvote.setAttribute("id", "downvote" + id);
-            downvote.addEventListener("click", () => !this.disabled && downvoteMsg(id))
+            downvote.addEventListener("click", () => {
+                downvoteMsg(id);
+            })
             downvote.innerHTML = "I dislike this!"
 
             msgContainer.appendChild(downvote)
@@ -215,13 +221,13 @@
                     msg_id,
                 })
             }).then(res => res.json()).then(data => {
+                console.log(data.data);
+
                 if (data.error) {
-                    console.log("cannot upvote message!");
                     return;
                 }
 
-                console.log(msg_id);
-                document.getElementById("upvote" + msg_id).disabled = true;
+                // document.getElementById("upvote" + msg_id).disabled = true;
             })
         }
 
@@ -235,13 +241,13 @@
                     msg_id,
                 })
             }).then(res => res.json()).then(data => {
+                console.log(data.data);
+
                 if (data.error) {
-                    console.log("cannot upvote message!");
                     return;
                 }
 
-                console.log(msg_id);
-                document.getElementById("downvote" + msg_id).disabled = true;
+                // document.getElementById("downvote" + msg_id).disabled = true;
             })
         }
 

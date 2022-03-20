@@ -140,7 +140,11 @@ app.post("/api/user/register", async (req, res) => //Listens for a post request 
     try {
         //Saves the user into the data base and returns the newly saved information, and makes a secret token from the ID
         const savedUser = await user.save();
-        const token = jwt.sign({ _id: savedUser.id }, process.env.TOKEN_SECRET) //the authToken step
+        const token = jwt.sign({
+            _id: savedUser._id,
+            username: savedUser.username,
+            profilePicture: savedUser.profilePicture,
+        }, process.env.TOKEN_SECRET) //the authToken step
         //hashes and creates a token with the json object username
         res.clearCookie("authToken");
         //clears the cookie
@@ -194,7 +198,11 @@ app.post("/api/user/login", async (req, res) => {
     if (!validPass) return res.status(400).send({ error: true, message: "Username or password incorrect" })
     //if validpass is false (undefined) then it returns an error
 
-    const token = jwt.sign({ _id: emailExists._id }, process.env.TOKEN_SECRET) //The authToken step
+    const token = jwt.sign({
+        _id: emailExists._id,
+        username: emailExists.username,
+        profilePicture: emailExists.profilePicture,
+    }, process.env.TOKEN_SECRET) //The authToken step
     //creates a token that stores the hashed username
 
     res.clearCookie("authToken");
@@ -229,8 +237,8 @@ app.post("/api/message/postMessage", TokenCheck, async (req, res) => {
         }
     )
     try {
-        Message.save();
-        res.json({ error: false });
+        let msg = await Message.save();
+        res.json({ error: false, name: req.user.username, message: msg.message, id: msg._id, pfpLink: req.user.profilePicture });
     } catch (err) {
         res.json({ error: true, message: "could not save message to database" });
     }
@@ -343,11 +351,12 @@ app.post("/api/message/upvote", TokenCheck, async (req, res) => {
     let user_id = req.user._id;
     let message_id = req.body.msg_id;
     let message = await Msg.findById(message_id);
+    let is_voted = message.upvote_list.includes(user_id);
 
     try {
         let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
-            upvotes: message.upvotes + 1,
-            upvote_list: [...message.upvote_list, user_id],
+            upvotes: is_voted ? (message.upvotes - 1) : (message.upvotes + 1),
+            upvote_list: is_voted ? message.upvote_list.filter(id => id !== user_id) : [...message.upvote_list, user_id],
         });
 
         res.json({ error: false, data: newMessage });
@@ -360,11 +369,12 @@ app.post("/api/message/downvote", TokenCheck, async (req, res) => {
     let user_id = req.user._id;
     let message_id = req.body.msg_id;
     let message = await Msg.findById(message_id);
+    let is_voted = message.downvote_list.includes(user_id);
 
     try {
         let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
-            downvotes: message.downvotes + 1,
-            downvote_list: [...message.downvote_list, user_id],
+            downvotes: is_voted ? (message.downvotes - 1) : (message.downvotes + 1),
+            downvote_list: is_voted ? message.downvote_list.filter(id => id !== user_id) : [...message.downvote_list, user_id],
         });
 
         res.json({ error: false, data: newMessage });

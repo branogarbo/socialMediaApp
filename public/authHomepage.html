@@ -110,7 +110,7 @@
                 }).then(res => res.json())
                 .then(data => {
                     console.log(data)
-                    DisplayMessage(data.name, data.message, data.id, data.pfpLink);
+                    DisplayMessage(true, data.name, data.message, data.id, data.pfpLink, data.upvotes, data.downvotes, data.upvote_list, data.downvote_list, data.user_id);
                 })
         }
 
@@ -155,13 +155,15 @@
                 }
 
                 for (let i = 0; i < data.message?.length; i++) {
-                    DisplayMessage(data.userInfos[i].username, data.message[i].message, data.message[i]._id, data.userInfos[i].pfp)
+                    DisplayMessage(false, data.userInfos[i].username, data.message[i].message, data.message[i]._id, data.userInfos[i].pfp, data.message[i].upvotes, data.message[i].downvotes, data.message[i].upvote_list, data.message[i].downvote_list, data.userInfos[i]._id)
                 }
             })
         }
 
 
-        const DisplayMessage = (name, content, id, pfpLink) => {
+        const DisplayMessage = (isBefore, name, content, msgID, pfpLink, upvotes, downvotes, upvoteList, downvoteList, userID) => {
+            let messageTimeline = document.getElementById("messageTimeline");
+
             var msgContainer = document.createElement("div");
             msgContainer.setAttribute("class", "msgContainer");
             var pfpImage = document.createElement("img")
@@ -183,35 +185,79 @@
 
             msgContainer.appendChild(messageContent)
 
+            let isUpvoted = upvoteList.includes(userID)
+            let isDownvoted = downvoteList.includes(userID)
 
             var upvote = document.createElement("button")
             upvote.setAttribute("class", "upvoteButton")
-            upvote.setAttribute("id", "upvote" + id);
-            upvote.addEventListener("click", () => {
-                upvoteMsg(id);
-            })
-            upvote.innerHTML = "I like this!"
+            upvote.setAttribute("id", "upvote" + msgID);
+            upvote.addEventListener("click", () => upvoteMsg(userID, msgID))
+
+            if (isUpvoted) {
+                upvote.innerHTML = "unlike"
+            } else {
+                upvote.innerHTML = "like"
+            }
 
             msgContainer.appendChild(upvote)
 
             var downvote = document.createElement("button")
             downvote.setAttribute("class", "downvoteButton")
-            downvote.setAttribute("id", "downvote" + id);
-            downvote.addEventListener("click", () => {
-                downvoteMsg(id);
-            })
-            downvote.innerHTML = "I dislike this!"
+            downvote.setAttribute("id", "downvote" + msgID);
+            downvote.addEventListener("click", () => downvoteMsg(userID, msgID))
+
+            if (isDownvoted) {
+                downvote.innerHTML = "undislike"
+            } else {
+                downvote.innerHTML = "dislike"
+            }
 
             msgContainer.appendChild(downvote)
 
-            document.getElementById("messageTimeline").appendChild(msgContainer)
-
-            document.getElementById("messageTimeline").appendChild(
+            msgContainer.appendChild(
                 document.createElement("p")
             )
+
+            let upvoteLabel = document.createElement("span")
+            upvoteLabel.innerHTML = "upvotes: "
+
+            msgContainer.appendChild(upvoteLabel)
+
+            var upvoteNum = document.createElement("span")
+            upvoteNum.setAttribute("id", "upvoteNum" + msgID)
+            upvoteNum.innerHTML = upvotes
+
+            msgContainer.appendChild(upvoteNum)
+
+            msgContainer.appendChild(
+                document.createElement("p")
+            )
+
+            let downvoteLabel = document.createElement("span")
+            downvoteLabel.innerHTML = "downvotes: "
+
+            msgContainer.appendChild(downvoteLabel)
+
+            var downvoteNum = document.createElement("span")
+            downvoteNum.setAttribute("id", "downvoteNum" + msgID)
+            downvoteNum.innerHTML = downvotes
+
+            msgContainer.appendChild(downvoteNum)
+
+            if (isBefore) {
+                messageTimeline.insertBefore(document.createElement("p"), messageTimeline.firstChild)
+
+                messageTimeline.insertBefore(msgContainer, messageTimeline.firstChild)
+            } else {
+                messageTimeline.appendChild(msgContainer)
+
+                messageTimeline.appendChild(
+                    document.createElement("p")
+                )
+            }
         }
 
-        const upvoteMsg = msg_id => {
+        const upvoteMsg = (user_id, msg_id) => {
             fetch("http://localhost:3000/api/message/upvote", {
                 method: "POST",
                 headers: {
@@ -221,17 +267,25 @@
                     msg_id,
                 })
             }).then(res => res.json()).then(data => {
-                console.log(data.data);
+                let msg = data.data;
 
                 if (data.error) {
                     return;
                 }
 
-                // document.getElementById("upvote" + msg_id).disabled = true;
+                document.getElementById("upvoteNum" + msg._id).innerHTML = msg.upvotes;
+
+                let isUpvoted = msg.upvote_list.includes(user_id)
+
+                if (isUpvoted) {
+                    document.getElementById("upvote" + msg._id).innerHTML = "unlike"
+                } else {
+                    document.getElementById("upvote" + msg._id).innerHTML = "like"
+                }
             })
         }
 
-        const downvoteMsg = msg_id => {
+        const downvoteMsg = (user_id, msg_id) => {
             fetch("http://localhost:3000/api/message/downvote", {
                 method: "POST",
                 headers: {
@@ -241,13 +295,21 @@
                     msg_id,
                 })
             }).then(res => res.json()).then(data => {
-                console.log(data.data);
+                let msg = data.data;
 
                 if (data.error) {
                     return;
                 }
 
-                // document.getElementById("downvote" + msg_id).disabled = true;
+                document.getElementById("downvoteNum" + msg._id).innerHTML = msg.downvotes;
+
+                let isDownvoted = msg.downvote_list.includes(user_id)
+
+                if (isDownvoted) {
+                    document.getElementById("downvote" + msg._id).innerHTML = "undislike"
+                } else {
+                    document.getElementById("downvote" + msg._id).innerHTML = "dislike"
+                }
             })
         }
 

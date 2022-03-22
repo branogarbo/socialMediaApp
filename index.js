@@ -238,7 +238,7 @@ app.post("/api/message/postMessage", TokenCheck, async (req, res) => {
     )
     try {
         let msg = await Message.save();
-        res.json({ error: false, name: req.user.username, message: msg.message, id: msg._id, pfpLink: req.user.profilePicture });
+        res.json({ error: false, name: req.user.username, message: msg.message, id: msg._id, pfpLink: req.user.profilePicture, upvotes: msg.upvotes, downvotes: msg.downvotes, upvote_list: msg.upvote_list, downvote_list: msg.downvote_list, user_id: req.user._id });
     } catch (err) {
         res.json({ error: true, message: "could not save message to database" });
     }
@@ -291,6 +291,7 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) => {
     dateMessage.push(firstDate)
 
     userInfos.push({
+        _id: userAccount._id,
         username: userAccount.username,
         pfp: userAccount.profilePicture
     })
@@ -307,6 +308,7 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) => {
             messages.push(selfMessages[i]);
             dateMessage.push(messageDate);
             userInfos.push({
+                _id: userAccount._id,
                 username: userAccount.username,
                 pfp: userAccount.profilePicture
             })
@@ -323,6 +325,7 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) => {
                     messages.splice(y, 0, selfMessages[i]);
                     dateMessage.splice(y, 0, messageDate);
                     userInfos.splice(y, 0, {
+                        _id: userAccount._id,
                         username: userAccount.username,
                         pfp: userAccount.profilePicture
                     })
@@ -341,10 +344,10 @@ app.get("/api/message/getMessages", TokenCheck, async (req, res) => {
     }
     console.log(messages)
     console.log(dateMessage)
+    console.log(userInfos);
 
     //sends to the client the messages to be show it on the webpage
     res.send({ error: false, message: messages, userInfos: userInfos })
-
 })
 
 app.post("/api/message/upvote", TokenCheck, async (req, res) => {
@@ -357,7 +360,7 @@ app.post("/api/message/upvote", TokenCheck, async (req, res) => {
         let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
             upvotes: is_voted ? (message.upvotes - 1) : (message.upvotes + 1),
             upvote_list: is_voted ? message.upvote_list.filter(id => id !== user_id) : [...message.upvote_list, user_id],
-        });
+        }, { returnOriginal: false });
 
         res.json({ error: false, data: newMessage });
     } catch (err) {
@@ -375,7 +378,7 @@ app.post("/api/message/downvote", TokenCheck, async (req, res) => {
         let newMessage = await Msg.findOneAndUpdate({ _id: message_id }, {
             downvotes: is_voted ? (message.downvotes - 1) : (message.downvotes + 1),
             downvote_list: is_voted ? message.downvote_list.filter(id => id !== user_id) : [...message.downvote_list, user_id],
-        });
+        }, { returnOriginal: false });
 
         res.json({ error: false, data: newMessage });
     } catch (err) {
